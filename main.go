@@ -41,6 +41,10 @@ type Pool struct {
 	NbWorker  int
 	Out       OutType
 	Worker    map[int]bool
+	// Trigger on each status
+	TriggerError   OutType
+	TriggerSuccess OutType
+	TriggerFinish  OutType
 }
 type OutType func(p *PoolEntry) error
 
@@ -140,6 +144,22 @@ func (p *Pool) UpdateStatus(k string, s string) error {
 	value.Status = s
 	value.Update = time.Now()
 	p.content.Swap(k, value)
+	if s == "Error" && p.TriggerError != nil {
+		p.Context("Entry in error and a trigger exist ", k)
+		errError := p.TriggerError(&value)
+		if errError == nil {
+			p.Context("Trigger return no error clean ", k)
+			p.content.Delete(k)
+		}
+	}
+	if s == "Finish" && p.TriggerFinish != nil {
+		p.Context("Entry in finish and a trigger exist ", k)
+		errSuccess := p.TriggerFinish(&value)
+		if errSuccess == nil {
+			p.Context("Trigger return no error clean ", k)
+			p.content.Delete(k)
+		}
+	}
 	return nil
 }
 
