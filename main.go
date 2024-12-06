@@ -209,15 +209,13 @@ func (p *Pool) Unload() {
 }
 
 // TODO Add priority on GetNext
-func (p *Pool) GetNext() (*poolEntry, string) {
-	var b *poolEntry
-	var key string
+func (p *Pool) GetNext() (b *poolEntry, key string) {
 	p.content.Range(func(k, v any) bool {
-
 		value, ok := v.(poolEntry)
 		if ok && value.Status == "New" {
 			b = &value
 			key = fmt.Sprint(k)
+
 		}
 		return true
 	})
