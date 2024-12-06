@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Version 1.0.3
+// Version 1.0.4
 
 var TimeOutFinish = 1 * time.Second
 var TimeOutError = 5 * time.Second
@@ -42,11 +42,12 @@ type Pool struct {
 	Out       OutType
 	Worker    map[int]bool
 }
-type OutType func(p *poolEntry) error
+type OutType func(p *PoolEntry) error
 
-type poolEntry struct {
-	Status   string
-	Content  any
+type PoolEntry struct {
+	Status  string
+	Content any
+
 	Priority int
 	Key      string
 	Result   error
@@ -66,7 +67,7 @@ func (p *Pool) Count() int {
 func (p *Pool) Clean() {
 	for {
 		p.content.Range(func(k, v interface{}) bool {
-			value, ok := v.(poolEntry)
+			value, ok := v.(PoolEntry)
 			if ok == true {
 				if value.Status == "Finish" {
 					if time.Now().Sub(value.Update) > TimeOutFinish {
@@ -93,7 +94,7 @@ func (p *Pool) Clean() {
 func (p *Pool) CountStatus() map[string]int {
 	var i = make(map[string]int)
 	p.content.Range(func(k, v interface{}) bool {
-		value, ok := v.(poolEntry)
+		value, ok := v.(PoolEntry)
 		if ok == true {
 			i[value.Status]++
 		}
@@ -115,7 +116,7 @@ func (p *Pool) Init() {
 // Add Used to add a new entry of type T
 func (p *Pool) Add(k string, t any, pr int) error {
 	p.Context("Try to add new entry ", k)
-	obj := poolEntry{
+	obj := PoolEntry{
 		Status:   "New",
 		Content:  t,
 		Priority: pr,
@@ -132,7 +133,7 @@ func (p *Pool) UpdateStatus(k string, s string) error {
 	if err != true {
 		return ErrorPoolKeyNotExist
 	}
-	value, ok := obj.(poolEntry)
+	value, ok := obj.(PoolEntry)
 	if ok != true {
 		return ErrorPoolEntryMismatch
 	}
@@ -156,7 +157,7 @@ func count(p *Pool) {
 	}
 }
 
-func addWorker(o *poolEntry, p *Pool) {
+func addWorker(o *PoolEntry, p *Pool) {
 	//fmt.Println(o)
 	p.NbWorker++
 	var i = p.NbWorker
@@ -209,9 +210,9 @@ func (p *Pool) Unload() {
 }
 
 // TODO Add priority on GetNext
-func (p *Pool) GetNext() (b *poolEntry, key string) {
+func (p *Pool) GetNext() (b *PoolEntry, key string) {
 	p.content.Range(func(k, v any) bool {
-		value, ok := v.(poolEntry)
+		value, ok := v.(PoolEntry)
 		if ok && value.Status == "New" {
 			b = &value
 			key = fmt.Sprint(k)
