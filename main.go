@@ -2,17 +2,22 @@ package POOL
 
 import (
 	"fmt"
-	"os"
 	"sync"
 	"time"
 )
+
+// Version 1.0.3
 
 var TimeOutFinish = 1 * time.Second
 var TimeOutError = 5 * time.Second
 
 // NewPool : Function used to init a pool
-// type is an any of object
-// worker is a function call foreach action to do
+// t  is an any of object
+// n  is a Name of pool
+// f is a function call foreach action to do OutType
+// nbParallel is amount of simultaneous worker
+// debug is a Boolean to show debug
+// i is the duration of each run
 func NewPool(t any, n string, f OutType, nbParallel int, debug bool, i time.Duration) (*Pool, error) {
 	p := Pool{}
 	p.Type = t
@@ -21,7 +26,6 @@ func NewPool(t any, n string, f OutType, nbParallel int, debug bool, i time.Dura
 	p.MaxWorker = nbParallel
 	p.Debug = debug
 	p.Interval = i
-	// Todo Add Error if path still exist or all param not set
 	return &p, nil
 }
 
@@ -31,7 +35,6 @@ type Pool struct {
 	Type      any    `json:"type,omitempty"`
 	Status    *PoolStatus
 	content   sync.Map
-	Path      *os.DirEntry
 	MaxWorker int
 	Debug     bool
 	Interval  time.Duration
